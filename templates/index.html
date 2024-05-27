@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Billiard Scorekeeper</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', (event) => {
+            fetchScores();
+
+            document.getElementById('add-player-form').addEventListener('submit', function(event) {
+                event.preventDefault();
+                addPlayer();
+            });
+        });
+
+        function fetchScores() {
+            fetch('/get_scores')
+                .then(response => response.json())
+                .then(data => {
+                    const playersList = document.getElementById('players-list');
+                    playersList.innerHTML = '';
+                    data.forEach(player => {
+                        const listItem = document.createElement('div');
+                        listItem.className = 'list-group-item d-flex justify-content-between align-items-center';
+                        listItem.innerHTML = `
+                            <span>${player[1]}: <strong>${player[2]}</strong> points</span>
+                            <div>
+                                <button class="btn btn-success btn-sm" onclick="changeScore(${player[0]}, 1)">+1</button>
+                                <button class="btn btn-danger btn-sm" onclick="changeScore(${player[0]}, -1)" ${player[2] == 0 ? 'disabled' : ''}>-1</button>
+                                <button class="btn btn-danger btn-sm ml-2" onclick="removePlayer(${player[0]})">Remove</button>
+                            </div>
+                        `;
+                        playersList.appendChild(listItem);
+                    });
+                });
+        }
+
+        function addPlayer() {
+            const name = document.getElementById('name').value;
+            fetch('/add_player', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name: name })
+            }).then(response => response.json())
+              .then(data => {
+                  if (data.success) {
+                      document.getElementById('name').value = '';
+                      fetchScores();
+                  }
+              });
+        }
+
+        function changeScore(playerId, delta) {
+            const url = delta > 0 ? `/increment_score/${playerId}` : `/decrement_score/${playerId}`;
+            fetch(url, { method: 'POST' })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        fetchScores();
+                    }
+                });
+        }
+
+        function removePlayer(playerId) {
+            fetch(`/remove_player/${playerId}`, { method: 'POST' })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        fetchScores();
+                    }
+                });
+        }
+    </script>
+</head>
+<body style="background-color: #86b6aa;">
+    <div class="container mt-5">
+        <h1 class="text-center">Billiard Scorekeeper</h1>
+        <div class="row">
+            <div class="col-md-6 offset-md-3">
+                <h2 class="text-center mt-4">Players</h2>
+                <div class="list-group" id="players-list">
+                    <!-- Players list will be populated here -->
+                </div>
+
+                <h2 class="text-center mt-4">Add Player</h2>
+                <form id="add-player-form" class="form-inline justify-content-center">
+                    <div class="form-group mb-2">
+                        <label for="name" class="sr-only">Name:</label>
+                        <input type="text" id="name" name="name" class="form-control" placeholder="Enter player's name">
+                    </div>
+                    <button type="submit" class="btn btn-primary mb-2 ml-2">Add Player</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
