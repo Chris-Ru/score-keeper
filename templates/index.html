@@ -19,7 +19,7 @@
         });
 
         function fetchScores() {
-            fetch('/get_scores')
+            fetch('/pool/get_scores')
                 .then(response => response.json())
                 .then(data => {
                     const playersList = document.getElementById('players-list');
@@ -42,7 +42,7 @@
 
         function addPlayer() {
             const name = document.getElementById('name').value;
-            fetch('/add_player', {
+            fetch('/pool/add_player', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ name: name })
@@ -56,7 +56,7 @@
         }
 
         function changeScore(playerId, delta) {
-            const url = delta > 0 ? `/increment_score/${playerId}` : `/decrement_score/${playerId}`;
+            const url = delta > 0 ? `/pool/increment_score/${playerId}` : `/pool/decrement_score/${playerId}`;
             fetch(url, { method: 'POST' })
                 .then(response => response.json())
                 .then(data => {
@@ -67,7 +67,7 @@
         }
 
         function removePlayer(playerId) {
-            fetch(`/remove_player/${playerId}`, { method: 'POST' })
+            fetch(`/pool/remove_player/${playerId}`, { method: 'POST' })
                 .then(response => response.json())
                 .then(data => {
                     if (data.success) {

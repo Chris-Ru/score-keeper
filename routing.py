@@ -24,25 +24,25 @@ def init_db():
             db.cursor().executescript(f.read())
         db.commit()
 
-@app.route('/')
+@app.route('/pool/')
 def index():
     return render_template('index.html')
 
-@app.route('/get_scores', methods=['GET'])
+@app.route('/pool/get_scores', methods=['GET'])
 def get_scores():
     db = get_db()
     cur = db.execute('SELECT p.id, p.name, IFNULL(SUM(s.score), 0) as total_score FROM players p LEFT JOIN scores s ON p.id = s.player_id GROUP BY p.id, p.name')
     players = cur.fetchall()
     return jsonify(players)
 
-@app.route('/add_player', methods=['POST'])
+@app.route('/pool/add_player', methods=['POST'])
 def add_player():
     db = get_db()
     db.execute('INSERT INTO players (name) VALUES (?)', [request.json['name']])
     db.commit()
     return jsonify(success=True)
 
-@app.route('/remove_player/<int:player_id>', methods=['POST'])
+@app.route('/pool/remove_player/<int:player_id>', methods=['POST'])
 def remove_player(player_id):
     db = get_db()
     db.execute('DELETE FROM players WHERE id = ?', [player_id])
@@ -50,14 +50,14 @@ def remove_player(player_id):
     db.commit()
     return jsonify(success=True)
 
-@app.route('/increment_score/<int:player_id>', methods=['POST'])
+@app.route('/pool/increment_score/<int:player_id>', methods=['POST'])
 def increment_score(player_id):
     db = get_db()
     db.execute('INSERT INTO scores (player_id, score) VALUES (?, 1)', [player_id])
     db.commit()
     return jsonify(success=True)
 
-@app.route('/decrement_score/<int:player_id>', methods=['POST'])
+@app.route('/pool/decrement_score/<int:player_id>', methods=['POST'])
 def decrement_score(player_id):
     db = get_db()
     cur = db.execute('SELECT IFNULL(SUM(score), 0) as total_score FROM scores WHERE player_id = ?', [player_id])
